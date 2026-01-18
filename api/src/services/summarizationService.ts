@@ -1,17 +1,13 @@
-import OpenAI from 'openai';
 import { SummarizationRequest, SummarizationResponse, ConversationMessage } from '../types';
 
 export class SummarizationService {
-  private openai: OpenAI;
-
+  // Using simple extractive summarization - no API needed!
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    // No API initialization needed for free summarization
   }
 
   /**
-   * Summarize a conversation using OpenAI GPT-4
+   * Summarize a conversation using simple extractive summarization (FREE!)
    * @param request - Summarization request with conversation messages
    * @returns Summary with key points and metadata
    */
@@ -19,38 +15,16 @@ export class SummarizationService {
     const { messages, format = 'brief' } = request;
 
     try {
-      // Format conversation for summarization
-      const conversationText = this.formatConversation(messages);
-
       // Extract metadata
       const languagesDetected = this.extractLanguages(messages);
       const duration = this.calculateDuration(messages);
       const participantCount = this.countParticipants(messages);
 
-      // Create prompt based on format
-      const prompt = this.createPrompt(conversationText, format);
+      // Create simple extractive summary
+      const summary = this.createSimpleSummary(messages, format);
 
-      // Call OpenAI API for summarization
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that summarizes conversations clearly and concisely. Extract the most important information and key points.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: format === 'brief' ? 500 : 1500,
-      });
-
-      const summary = completion.choices[0]?.message?.content || 'Unable to generate summary';
-
-      // Extract key points from summary
-      const keyPoints = this.extractKeyPoints(summary);
+      // Extract key points
+      const keyPoints = this.extractKeyPointsFromMessages(messages);
 
       return {
         summary,
@@ -67,61 +41,83 @@ export class SummarizationService {
   }
 
   /**
-   * Format conversation messages into readable text
-   * @param messages - Array of conversation messages
-   * @returns Formatted conversation string
+   * Create a simple summary without AI
+   * @param messages - Conversation messages
+   * @param format - Summary format
+   * @returns Summary text
    */
-  private formatConversation(messages: ConversationMessage[]): string {
-    return messages
-      .map(msg => {
-        const role = msg.speaker === 'listener' ? 'Listener' : 'Speaker';
-        const langInfo = msg.detectedLanguage !== 'en' ? ` [${msg.detectedLanguage}]` : '';
-        return `${role}${langInfo}: ${msg.originalText}\nTranslation: ${msg.translatedText}`;
-      })
-      .join('\n\n');
-  }
+  private createSimpleSummary(messages: ConversationMessage[], format: 'brief' | 'detailed'): string {
+    if (messages.length === 0) {
+      return 'No conversation recorded.';
+    }
 
-  /**
-   * Create summarization prompt based on format
-   * @param conversationText - Formatted conversation text
-   * @param format - Summary format (brief or detailed)
-   * @returns Prompt string for OpenAI
-   */
-  private createPrompt(conversationText: string, format: 'brief' | 'detailed'): string {
-    const basePrompt = `Please summarize the following conversation:\n\n${conversationText}`;
+    const totalMessages = messages.length;
+    const languages = this.extractLanguages(messages);
+    const duration = this.calculateDuration(messages);
 
     if (format === 'brief') {
-      return `${basePrompt}\n\nProvide a brief summary in 2-3 sentences highlighting the main topic and outcome.`;
+      return `Conversation with ${totalMessages} message${totalMessages > 1 ? 's' : ''} over ${duration}. Languages detected: ${languages.join(', ')}.`;
     }
 
-    return `${basePrompt}\n\nProvide a detailed summary including:
-1. Main topics discussed
-2. Key points and decisions
-3. Action items (if any)
-4. Overall tone and context`;
+    // Detailed summary
+    let summary = `Conversation Summary:\n\n`;
+    summary += `Total Messages: ${totalMessages}\n`;
+    summary += `Duration: ${duration}\n`;
+    summary += `Languages: ${languages.join(', ')}\n`;
+    summary += `Participants: ${this.countParticipants(messages)}\n\n`;
+
+    // Include first and last few messages
+    const previewCount = Math.min(3, messages.length);
+    summary += `First messages:\n`;
+    for (let i = 0; i < previewCount; i++) {
+      const msg = messages[i];
+      const role = msg.speaker === 'listener' ? 'Listener' : 'Speaker';
+      summary += `${role}: ${msg.translatedText}\n`;
+    }
+
+    if (messages.length > 6) {
+      summary += `\n... (${messages.length - 6} more messages) ...\n\n`;
+    }
+
+    if (messages.length > 3) {
+      summary += `\nLast messages:\n`;
+      for (let i = Math.max(messages.length - 3, previewCount); i < messages.length; i++) {
+        const msg = messages[i];
+        const role = msg.speaker === 'listener' ? 'Listener' : 'Speaker';
+        summary += `${role}: ${msg.translatedText}\n`;
+      }
+    }
+
+    return summary;
   }
 
   /**
-   * Extract key points from summary text
-   * @param summary - Summary text
+   * Extract key points from messages
+   * @param messages - Conversation messages
    * @returns Array of key points
    */
-  private extractKeyPoints(summary: string): string[] {
-    const lines = summary.split('\n').filter(line => line.trim().length > 0);
+  private extractKeyPointsFromMessages(messages: ConversationMessage[]): string[] {
+    const keyPoints: string[] = [];
 
-    // Look for bullet points or numbered lists
-    const keyPoints = lines
-      .filter(line => /^[-•*]\s+/.test(line.trim()) || /^\d+\.\s+/.test(line.trim()))
-      .map(line => line.replace(/^[-•*]\s+/, '').replace(/^\d+\.\s+/, '').trim());
+    // Extract unique topics/themes (simple keyword-based)
+    const allText = messages.map(m => m.translatedText.toLowerCase()).join(' ');
 
-    // If no bullet points found, split by sentences and take first 3-5
+    // Common question words indicate important points
+    if (allText.includes('when')) keyPoints.push('Discussed timing/schedule');
+    if (allText.includes('where')) keyPoints.push('Discussed location');
+    if (allText.includes('how')) keyPoints.push('Discussed methods/process');
+    if (allText.includes('why')) keyPoints.push('Discussed reasons/motivation');
+    if (allText.includes('what')) keyPoints.push('Discussed objectives/items');
+
+    // If no key points found, use message count
     if (keyPoints.length === 0) {
-      const sentences = summary.split(/[.!?]+/).filter(s => s.trim().length > 20);
-      return sentences.slice(0, Math.min(5, sentences.length)).map(s => s.trim());
+      keyPoints.push(`${messages.length} messages exchanged`);
+      keyPoints.push(`Multiple languages used`);
     }
 
-    return keyPoints;
+    return keyPoints.slice(0, 5); // Max 5 key points
   }
+
 
   /**
    * Extract unique languages from conversation

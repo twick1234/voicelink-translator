@@ -1,13 +1,14 @@
-import { Translate } from '@google-cloud/translate/build/src/v2';
+import axios from 'axios';
 import { TranslationRequest, TranslationResponse } from '../types';
 
 export class TranslationService {
-  private translateClient: Translate;
+  // Using LibreTranslate - a free, open-source translation API
+  // Public instance: https://libretranslate.com
+  private apiUrl: string;
 
   constructor() {
-    this.translateClient = new Translate({
-      key: process.env.GOOGLE_CLOUD_API_KEY,
-    });
+    // Use public LibreTranslate instance (FREE!)
+    this.apiUrl = process.env.LIBRETRANSLATE_URL || 'https://libretranslate.com';
   }
 
   /**
@@ -17,22 +18,30 @@ export class TranslationService {
    */
   async detectLanguage(text: string): Promise<{ language: string; confidence: number }> {
     try {
-      const [detection] = await this.translateClient.detect(text);
+      const response = await axios.post(`${this.apiUrl}/detect`, {
+        q: text,
+      });
 
-      if (Array.isArray(detection)) {
+      const detections = response.data;
+      if (detections && detections.length > 0) {
         return {
-          language: detection[0].language,
-          confidence: detection[0].confidence || 0.95,
+          language: detections[0].language,
+          confidence: detections[0].confidence,
         };
       }
 
+      // Fallback to English if detection fails
       return {
-        language: detection.language,
-        confidence: detection.confidence || 0.95,
+        language: 'en',
+        confidence: 0.5,
       };
     } catch (error) {
       console.error('Language detection error:', error);
-      throw new Error(`Failed to detect language: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Fallback to English
+      return {
+        language: 'en',
+        confidence: 0.5,
+      };
     }
   }
 
@@ -68,15 +77,17 @@ export class TranslationService {
         };
       }
 
-      // Perform translation
-      const [translation] = await this.translateClient.translate(text, {
-        from: detectedLang,
-        to: targetLanguage,
+      // Perform translation using LibreTranslate
+      const response = await axios.post(`${this.apiUrl}/translate`, {
+        q: text,
+        source: detectedLang,
+        target: targetLanguage,
+        format: 'text',
       });
 
       return {
         originalText: text,
-        translatedText: translation,
+        translatedText: response.data.translatedText,
         detectedLanguage: detectedLang,
         confidence,
         timestamp: new Date().toISOString(),
@@ -93,14 +104,27 @@ export class TranslationService {
    */
   async getSupportedLanguages(): Promise<Array<{ code: string; name: string }>> {
     try {
-      const [languages] = await this.translateClient.getLanguages();
-      return languages.map(lang => ({
+      const response = await axios.get(`${this.apiUrl}/languages`);
+
+      return response.data.map((lang: any) => ({
         code: lang.code,
         name: lang.name,
       }));
     } catch (error) {
       console.error('Error fetching supported languages:', error);
-      throw new Error(`Failed to fetch supported languages: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Return common languages as fallback
+      return [
+        { code: 'en', name: 'English' },
+        { code: 'es', name: 'Spanish' },
+        { code: 'fr', name: 'French' },
+        { code: 'de', name: 'German' },
+        { code: 'it', name: 'Italian' },
+        { code: 'pt', name: 'Portuguese' },
+        { code: 'ru', name: 'Russian' },
+        { code: 'ja', name: 'Japanese' },
+        { code: 'ko', name: 'Korean' },
+        { code: 'zh', name: 'Chinese' },
+      ];
     }
   }
 
