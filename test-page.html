@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceLink Translator - API Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .badge {
+            background: #ffc107;
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #28a745;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #28a745;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #28a745;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            background: #f8f9fa;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .result-item strong {
+            color: #333;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .example-btn {
+            background: #e9ecef;
+            color: #333;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .example-btn:hover {
+            background: #dee2e6;
+        }
+
+        .api-url {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 VoiceLink Translator</h1>
+            <div class="badge">100% FREE - Live API Test</div>
+            <p style="margin-top: 15px; opacity: 0.9;">Test the translation API in real-time</p>
+        </div>
+
+        <div class="content">
+            <!-- API URL Configuration -->
+            <div class="section">
+                <h2>🔧 API Configuration</h2>
+                <div class="form-group">
+                    <label for="apiUrl">API Base URL:</label>
+                    <input type="text" id="apiUrl" value="http://localhost:3000" placeholder="Enter API URL">
+                    <div class="example-buttons">
+                        <button class="example-btn" onclick="setApiUrl('http://localhost:3000')">Local</button>
+                        <button class="example-btn" onclick="setApiUrl('https://voicelink-translator.vercel.app')">Vercel (Production)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Translation Test -->
+            <div class="section">
+                <h2>💬 Test Translation</h2>
+                <form id="translationForm">
+                    <div class="form-group">
+                        <label for="textInput">Text to Translate:</label>
+                        <textarea id="textInput" placeholder="Enter text to translate...">Hello world</textarea>
+                        <div class="example-buttons">
+                            <button type="button" class="example-btn" onclick="setExample('Hello world', 'es')">English → Spanish</button>
+                            <button type="button" class="example-btn" onclick="setExample('Bonjour le monde', 'en')">French → English</button>
+                            <button type="button" class="example-btn" onclick="setExample('Guten Morgen', 'en')">German → English</button>
+                            <button type="button" class="example-btn" onclick="setExample('こんにちは', 'en')">Japanese → English</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="targetLang">Target Language:</label>
+                        <select id="targetLang">
+                            <option value="en">English</option>
+                            <option value="es" selected>Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="it">Italian</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="ru">Russian</option>
+                            <option value="ja">Japanese</option>
+                            <option value="ko">Korean</option>
+                            <option value="zh">Chinese</option>
+                            <option value="ar">Arabic</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn" id="translateBtn">Translate Now</button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Translating...</p>
+                </div>
+
+                <div class="error" id="error"></div>
+
+                <div class="result" id="result">
+                    <h3>Translation Result:</h3>
+                    <div class="result-item">
+                        <strong>Original Text:</strong>
+                        <p id="originalText"></p>
+                    </div>
+                    <div class="result-item">
+                        <strong>Translated Text:</strong>
+                        <p id="translatedText" style="font-size: 1.2em; color: #28a745; font-weight: bold;"></p>
+                    </div>
+                    <div class="result-item">
+                        <strong>Detected Language:</strong>
+                        <span id="detectedLang"></span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Confidence:</strong>
+                        <span id="confidence"></span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Timestamp:</strong>
+                        <span id="timestamp"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Check -->
+            <div class="section">
+                <h2>❤️ API Health Check</h2>
+                <button class="btn" onclick="checkHealth()">Check API Status</button>
+                <div class="result" id="healthResult">
+                    <h3>Health Status:</h3>
+                    <pre id="healthData" style="background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setApiUrl(url) {
+            document.getElementById('apiUrl').value = url;
+        }
+
+        function setExample(text, targetLang) {
+            document.getElementById('textInput').value = text;
+            document.getElementById('targetLang').value = targetLang;
+        }
+
+        async function checkHealth() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const healthResult = document.getElementById('healthResult');
+            const healthData = document.getElementById('healthData');
+            const errorDiv = document.getElementById('error');
+
+            errorDiv.classList.remove('show');
+            healthResult.classList.remove('show');
+
+            try {
+                const response = await fetch(`${apiUrl}/api/health`);
+                const data = await response.json();
+
+                healthData.textContent = JSON.stringify(data, null, 2);
+                healthResult.classList.add('show');
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}. Make sure the API is running!`;
+                errorDiv.classList.add('show');
+            }
+        }
+
+        document.getElementById('translationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const apiUrl = document.getElementById('apiUrl').value;
+            const text = document.getElementById('textInput').value;
+            const targetLang = document.getElementById('targetLang').value;
+
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            const translateBtn = document.getElementById('translateBtn');
+
+            // Reset UI
+            loading.classList.remove('show');
+            result.classList.remove('show');
+            errorDiv.classList.remove('show');
+
+            // Show loading
+            loading.classList.add('show');
+            translateBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${apiUrl}/api/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        targetLanguage: targetLang
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Display results
+                document.getElementById('originalText').textContent = data.originalText;
+                document.getElementById('translatedText').textContent = data.translatedText;
+                document.getElementById('detectedLang').textContent = data.detectedLanguage;
+                document.getElementById('confidence').textContent = (data.confidence * 100).toFixed(0) + '%';
+                document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString();
+
+                loading.classList.remove('show');
+                result.classList.add('show');
+            } catch (error) {
+                loading.classList.remove('show');
+                errorDiv.textContent = `Error: ${error.message}. Make sure the API is running at ${apiUrl}`;
+                errorDiv.classList.add('show');
+            } finally {
+                translateBtn.disabled = false;
+            }
+        });
+
+        // Auto-check health on load
+        window.addEventListener('load', () => {
+            setTimeout(checkHealth, 500);
+        });
+    </script>
+</body>
+</html>
