@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceLink Translator - Real-time Voice Translation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Logo and Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem;
+            filter: drop-shadow(0 4px 20px rgba(34, 197, 94, 0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 50%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .free-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(34, 197, 94, 0.5);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #22c55e;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Navigation Cards */
+        .nav-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: #22c55e;
+            text-align: center;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .nav-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 2px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #22c55e, #10b981);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-8px);
+            border-color: #22c55e;
+            box-shadow: 0 12px 35px rgba(34, 197, 94, 0.3);
+        }
+
+        .nav-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #22c55e;
+        }
+
+        .card-description {
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .card-features {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .card-features li {
+            padding: 0.5rem 0;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .card-features li::before {
+            content: "✓ ";
+            color: #22c55e;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        /* Technology Stack */
+        .tech-stack {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .tech-item {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(34, 197, 94, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .tech-item:hover {
+            border-color: rgba(34, 197, 94, 0.4);
+            transform: scale(1.05);
+        }
+
+        .tech-name {
+            font-weight: bold;
+            color: #22c55e;
+            margin-bottom: 0.25rem;
+        }
+
+        .tech-type {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(34, 197, 94, 0.2);
+            color: #64748b;
+        }
+
+        .footer a {
+            color: #22c55e;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Logo -->
+        <div class="header">
+            <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Circular background with gradient -->
+                <defs>
+                    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#22c55e;stop-opacity:0.2" />
+                        <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.3" />
+                    </linearGradient>
+                    <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#10b981;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+
+                <!-- Background circle -->
+                <circle cx="100" cy="100" r="95" fill="url(#bgGradient)" stroke="#22c55e" stroke-width="2"/>
+
+                <!-- Sound waves (left side) -->
+                <path d="M 50 80 Q 60 70, 70 80 T 90 80" fill="none" stroke="url(#waveGradient)" stroke-width="3" stroke-linecap="round">
+                    <animate attributeName="d"
+                        values="M 50 80 Q 60 70, 70 80 T 90 80;
+                                M 50 80 Q 60 90, 70 80 T 90 80;
+                                M 50 80 Q 60 70, 70 80 T 90 80"
+                        dur="2s" repeatCount="indefinite"/>
+                </path>
+                <path d="M 45 100 Q 57.5 85, 70 100 T 95 100" fill="none" stroke="url(#waveGradient)" stroke-width="4" stroke-linecap="round">
+                    <animate attributeName="d"
+                        values="M 45 100 Q 57.5 85, 70 100 T 95 100;
+                                M 45 100 Q 57.5 115, 70 100 T 95 100;
+                                M 45 100 Q 57.5 85, 70 100 T 95 100"
+                        dur="2s" repeatCount="indefinite" begin="0.2s"/>
+                </path>
+                <path d="M 50 120 Q 60 110, 70 120 T 90 120" fill="none" stroke="url(#waveGradient)" stroke-width="3" stroke-linecap="round">
+                    <animate attributeName="d"
+                        values="M 50 120 Q 60 110, 70 120 T 90 120;
+                                M 50 120 Q 60 130, 70 120 T 90 120;
+                                M 50 120 Q 60 110, 70 120 T 90 120"
+                        dur="2s" repeatCount="indefinite" begin="0.4s"/>
+                </path>
+
+                <!-- Microphone icon (center) -->
+                <rect x="95" y="85" width="10" height="25" rx="5" fill="#22c55e"/>
+                <path d="M 88 108 Q 88 120, 100 120 Q 112 120, 112 108" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+                <line x1="100" y1="120" x2="100" y2="130" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+                <line x1="92" y1="130" x2="108" y2="130" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+
+                <!-- Translation arrows (right side) -->
+                <g transform="translate(110, 100)">
+                    <!-- Arrow pointing right -->
+                    <path d="M 5 -15 L 35 -15 L 35 -20 L 45 -10 L 35 0 L 35 -5 L 5 -5 Z" fill="#10b981" opacity="0.8">
+                        <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+                    </path>
+                    <!-- Arrow pointing left -->
+                    <path d="M 45 15 L 15 15 L 15 20 L 5 10 L 15 0 L 15 5 L 45 5 Z" fill="#059669" opacity="0.8">
+                        <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite" begin="0.75s"/>
+                    </path>
+                </g>
+
+                <!-- Language symbols -->
+                <text x="115" y="75" font-family="Arial" font-size="16" fill="#22c55e" font-weight="bold">A</text>
+                <text x="160" y="100" font-family="Arial" font-size="16" fill="#10b981" font-weight="bold">中</text>
+                <text x="115" y="125" font-family="Arial" font-size="16" fill="#059669" font-weight="bold">あ</text>
+            </svg>
+
+            <h1>VoiceLink Translator</h1>
+            <p class="tagline">Real-time Voice Translation for Global Communication</p>
+            <div class="free-badge">100% FREE - NO API KEYS NEEDED</div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">40/40</div>
+                <div class="stat-label">Tests Passing</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">87.71%</div>
+                <div class="stat-label">Code Coverage</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$0</div>
+                <div class="stat-label">Monthly Cost</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">&lt;300ms</div>
+                <div class="stat-label">Test Suite Runtime</div>
+            </div>
+        </div>
+
+        <!-- Navigation Cards -->
+        <div class="nav-section">
+            <h2 class="section-title">Testing & Documentation</h2>
+            <div class="card-grid">
+                <a href="coverage/index.html" class="nav-card">
+                    <div class="card-icon">📊</div>
+                    <h3 class="card-title">Test Coverage Report</h3>
+                    <p class="card-description">
+                        Comprehensive code coverage analysis powered by Vitest and V8 coverage provider.
+                    </p>
+                    <ul class="card-features">
+                        <li>87.71% overall coverage</li>
+                        <li>100% Speech Service coverage</li>
+                        <li>Interactive HTML reports</li>
+                        <li>Line-by-line analysis</li>
+                    </ul>
+                </a>
+
+                <a href="dashboard.html" class="nav-card">
+                    <div class="card-icon">📈</div>
+                    <h3 class="card-title">Project Dashboard</h3>
+                    <p class="card-description">
+                        Visual overview of project progress, technology stack, and development status.
+                    </p>
+                    <ul class="card-features">
+                        <li>Real-time project metrics</li>
+                        <li>Technology stack visualization</li>
+                        <li>Development timeline</li>
+                        <li>Service status indicators</li>
+                    </ul>
+                </a>
+
+                <a href="test-page.html" class="nav-card">
+                    <div class="card-icon">🧪</div>
+                    <h3 class="card-title">Manual API Testing</h3>
+                    <p class="card-description">
+                        Interactive interface for testing translation API endpoints in real-time.
+                    </p>
+                    <ul class="card-features">
+                        <li>Live translation testing</li>
+                        <li>Health check monitoring</li>
+                        <li>Example test cases</li>
+                        <li>Response visualization</li>
+                    </ul>
+                </a>
+            </div>
+        </div>
+
+        <!-- Documentation Links -->
+        <div class="nav-section">
+            <h2 class="section-title">Documentation</h2>
+            <div class="card-grid">
+                <a href="docs/ARCHITECTURE.md" class="nav-card">
+                    <div class="card-icon">🏗️</div>
+                    <h3 class="card-title">Architecture</h3>
+                    <p class="card-description">
+                        Conceptual, logical, and physical architecture documentation with diagrams.
+                    </p>
+                </a>
+
+                <a href="docs/TESTING.md" class="nav-card">
+                    <div class="card-icon">✅</div>
+                    <h3 class="card-title">Testing Guide</h3>
+                    <p class="card-description">
+                        Complete guide to testing framework, coverage, and best practices.
+                    </p>
+                </a>
+
+                <a href="README.md" class="nav-card">
+                    <div class="card-icon">📖</div>
+                    <h3 class="card-title">README</h3>
+                    <p class="card-description">
+                        Project overview, setup instructions, and quick start guide.
+                    </p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Technology Stack -->
+        <div class="tech-stack">
+            <h2 class="section-title">Technology Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <div class="tech-name">Vitest</div>
+                    <div class="tech-type">Testing Framework</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">MyMemory API</div>
+                    <div class="tech-type">Translation</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">franc-min</div>
+                    <div class="tech-type">Language Detection</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Flutter</div>
+                    <div class="tech-type">Mobile Framework</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">TypeScript</div>
+                    <div class="tech-type">Backend Language</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Express.js</div>
+                    <div class="tech-type">Web Framework</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Vercel</div>
+                    <div class="tech-type">Deployment</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">V8 Coverage</div>
+                    <div class="tech-type">Code Coverage</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                VoiceLink Translator - Built with 100% free and open-source technologies
+            </p>
+            <p style="margin-top: 1rem;">
+                <a href="https://github.com" target="_blank">GitHub</a> •
+                <a href="docs/ARCHITECTURE.md">Architecture</a> •
+                <a href="docs/TESTING.md">Testing</a> •
+                <a href="README.md">README</a>
+            </p>
+            <p style="margin-top: 1rem; font-size: 0.85rem;">
+                Test Suite: 40/40 passing | Coverage: 87.71% | Runtime: &lt;300ms | Cost: $0/month
+            </p>
+        </div>
+    </div>
+</body>
+</html>
