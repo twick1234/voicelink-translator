@@ -1,52 +1,50 @@
 import axios from 'axios';
+import { franc } from 'franc-min';
 import { TranslationRequest, TranslationResponse } from '../types';
 
+// Language code mapping from franc (ISO 639-3) to ISO 639-1
+const langCodeMap: Record<string, string> = {
+  'eng': 'en', 'spa': 'es', 'fra': 'fr', 'deu': 'de', 'ita': 'it',
+  'por': 'pt', 'rus': 'ru', 'jpn': 'ja', 'kor': 'ko', 'zho': 'zh',
+  'ara': 'ar', 'hin': 'hi', 'ben': 'bn', 'urd': 'ur', 'tur': 'tr',
+  'vie': 'vi', 'tha': 'th', 'pol': 'pl', 'nld': 'nl', 'swe': 'sv',
+};
+
 export class TranslationService {
-  // Using LibreTranslate - a free, open-source translation API
-  // Public instance: https://libretranslate.com
+  // Using MyMemory - a free translation API that requires NO API key!
+  // Free tier: Generous limits, no registration required
   private apiUrl: string;
 
   constructor() {
-    // Use public LibreTranslate instance (FREE!)
-    this.apiUrl = process.env.LIBRETRANSLATE_URL || 'https://libretranslate.com';
+    // MyMemory free translation API
+    this.apiUrl = 'https://api.mymemory.translated.net';
   }
 
   /**
-   * Detect the language of the provided text
+   * Detect the language of the provided text using franc (offline, free!)
    * @param text - Text to detect language from
    * @returns Detected language code and confidence
    */
   async detectLanguage(text: string): Promise<{ language: string; confidence: number }> {
     try {
-      const response = await axios.post(`${this.apiUrl}/detect`, {
-        q: text,
-      });
+      const detected = franc(text, { minLength: 3 });
 
-      const detections = response.data;
-      if (detections && detections.length > 0) {
-        return {
-          language: detections[0].language,
-          confidence: detections[0].confidence,
-        };
+      if (detected === 'und') {
+        // Undetermined language
+        return { language: 'en', confidence: 0.3 };
       }
 
-      // Fallback to English if detection fails
-      return {
-        language: 'en',
-        confidence: 0.5,
-      };
+      // Convert ISO 639-3 to ISO 639-1
+      const language = langCodeMap[detected] || 'en';
+      return { language, confidence: 0.8 };
     } catch (error) {
       console.error('Language detection error:', error);
-      // Fallback to English
-      return {
-        language: 'en',
-        confidence: 0.5,
-      };
+      return { language: 'en', confidence: 0.5 };
     }
   }
 
   /**
-   * Translate text to target language
+   * Translate text to target language using MyMemory API (FREE!)
    * @param request - Translation request with text and optional source/target languages
    * @returns Translation response with original, translated text and metadata
    */
@@ -77,19 +75,24 @@ export class TranslationService {
         };
       }
 
-      // Perform translation using LibreTranslate
-      const response = await axios.post(`${this.apiUrl}/translate`, {
-        q: text,
-        source: detectedLang,
-        target: targetLanguage,
-        format: 'text',
+      // Translate using MyMemory API
+      const langPair = `${detectedLang}|${targetLanguage}`;
+      const response = await axios.get(`${this.apiUrl}/get`, {
+        params: {
+          q: text,
+          langpair: langPair,
+        },
       });
+
+      if (response.data.responseStatus !== 200) {
+        throw new Error(`Translation API error: ${response.data.responseDetails}`);
+      }
 
       return {
         originalText: text,
-        translatedText: response.data.translatedText,
+        translatedText: response.data.responseData.translatedText,
         detectedLanguage: detectedLang,
-        confidence,
+        confidence: response.data.responseData.match || confidence,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
