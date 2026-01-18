@@ -1,11 +1,11 @@
-import speech from '@google-cloud/speech';
+import { SpeechClient } from '@google-cloud/speech';
 import { SpeechToTextRequest, SpeechToTextResponse } from '../types';
 
 export class SpeechService {
-  private client: speech.v1.SpeechClient;
+  private client: SpeechClient;
 
   constructor() {
-    this.client = new speech.v1.SpeechClient({
+    this.client = new SpeechClient({
       keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     });
   }
@@ -48,7 +48,7 @@ export class SpeechService {
       });
 
       const transcription = response.results
-        ?.map(result => result.alternatives?.[0]?.transcript)
+        ?.map((result: any) => result.alternatives?.[0]?.transcript)
         .join(' ') || '';
 
       const confidence = response.results?.[0]?.alternatives?.[0]?.confidence || 0;
@@ -86,16 +86,15 @@ export class SpeechService {
           sampleRateHertz: 16000,
           languageCode,
           enableAutomaticPunctuation: true,
-          interimResults: true,
           model: 'default',
         },
         interimResults: true,
       })
-      .on('error', (error) => {
+      .on('error', (error: any) => {
         console.error('Streaming error:', error);
         throw error;
       })
-      .on('data', (data) => {
+      .on('data', (data: any) => {
         const result = data.results[0];
         if (result && result.alternatives && result.alternatives.length > 0) {
           const transcript = result.alternatives[0].transcript;

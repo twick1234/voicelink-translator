@@ -46,13 +46,15 @@ export class TranslationService {
 
     try {
       // Detect source language if not provided
-      let detectedLang = sourceLanguage;
+      let detectedLang: string;
       let confidence = 1.0;
 
       if (!sourceLanguage) {
         const detection = await this.detectLanguage(text);
         detectedLang = detection.language;
         confidence = detection.confidence;
+      } else {
+        detectedLang = sourceLanguage;
       }
 
       // Skip translation if source and target are the same
