@@ -15,8 +15,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(helmet()); // Security headers
+// Configure CORS to allow all origins in development
+const allowedOrigins = process.env.ALLOWED_ORIGINS || '*';
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+  origin: allowedOrigins === '*' ? true : allowedOrigins.split(','),
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies

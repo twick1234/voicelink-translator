@@ -27,16 +27,39 @@ export class TranslationService {
    */
   async detectLanguage(text: string): Promise<{ language: string; confidence: number }> {
     try {
-      const detected = franc(text, { minLength: 3 });
+      // Common English words for quick detection
+      const commonEnglishWords = [
+        'hello', 'world', 'good', 'morning', 'thank', 'you', 'please',
+        'how', 'are', 'what', 'when', 'where', 'why', 'the', 'is', 'and'
+      ];
+
+      const lowerText = text.toLowerCase();
+      const hasEnglishWords = commonEnglishWords.some(word => lowerText.includes(word));
+
+      // If text contains common English words, assume English
+      if (hasEnglishWords) {
+        return { language: 'en', confidence: 0.9 };
+      }
+
+      // For very short text (< 20 chars), default to English
+      if (text.length < 20) {
+        return { language: 'en', confidence: 0.6 };
+      }
+
+      const detected = franc(text, { minLength: 20 });
 
       if (detected === 'und') {
-        // Undetermined language
-        return { language: 'en', confidence: 0.3 };
+        // Undetermined language - default to English
+        return { language: 'en', confidence: 0.5 };
       }
 
       // Convert ISO 639-3 to ISO 639-1
       const language = langCodeMap[detected] || 'en';
-      return { language, confidence: 0.8 };
+
+      // Higher confidence for longer text
+      const confidence = text.length > 50 ? 0.9 : 0.7;
+
+      return { language, confidence };
     } catch (error) {
       console.error('Language detection error:', error);
       return { language: 'en', confidence: 0.5 };

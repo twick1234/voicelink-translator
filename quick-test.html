@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick API Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #1a1a2e; color: white; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 20px; background: #16213e; border-radius: 8px; }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>Quick API Test</h1>
+    <button onclick="testHealth()">Test Health</button>
+    <button onclick="testTranslate()">Test Translation</button>
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        const resultDiv = document.getElementById('result');
+
+        async function testHealth() {
+            resultDiv.innerHTML = 'Testing health endpoint...';
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ Health Check Passed!</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testTranslate() {
+            resultDiv.innerHTML = 'Testing translation endpoint...';
+            try {
+                const response = await fetch(`${API_URL}/api/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: 'Hello world',
+                        targetLanguage: 'es'
+                    })
+                });
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ Translation Passed!</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>
